@@ -1,6 +1,6 @@
 # Mask R-CNN
-# 该项目的来源于up：霹雳吧啦Wz（https://space.bilibili.com/18161609）
-# 收集的目的是为了进一步改进速度
+## 该项目的来源于up：霹雳吧啦Wz（https://space.bilibili.com/18161609）
+## 收集的目的是为了进一步改进速度
 ## 该项目参考自pytorch官方torchvision模块中的源码(使用pycocotools处略有不同)
 * https://github.com/pytorch/vision/tree/master/references/detection
 
@@ -169,4 +169,4 @@ amp：是否使用混合精度训练，不仅能加速训练还能减少gpu的�
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.619
 ```
 
-# 最后感谢up：霹雳吧啦Wz的分享，后续加速完成后 ，再把更改部分做详细解释！
+## 最后感谢up：霹雳吧啦Wz的分享，后续加速完成后 ，再把更改部分做详细解释！
