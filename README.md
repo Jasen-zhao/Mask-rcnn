@@ -167,6 +167,3 @@ amp：是否使用混合精度训练，不仅能加速训练还能减少gpu的�
  Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.509
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.619
 ```
-
-## 如果对Mask RCNN原理不是很理解可参考我的bilibili
-https://www.bilibili.com/video/BV1ZY411774T
