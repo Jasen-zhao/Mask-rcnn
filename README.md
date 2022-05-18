@@ -1,5 +1,6 @@
 # Mask R-CNN
-
+# 该项目的来源于up：霹雳吧啦Wz（https://space.bilibili.com/18161609）
+# 收集的目的是为了进一步改进速度
 ## 该项目参考自pytorch官方torchvision模块中的源码(使用pycocotools处略有不同)
 * https://github.com/pytorch/vision/tree/master/references/detection
 
@@ -41,7 +42,7 @@
 ## 数据集，本例程使用的有COCO2017数据集和Pascal VOC2012数据集
 ### COCO2017数据集
 * COCO官网地址：https://cocodataset.org/
-* 对数据集不了解的可以看下我写的博文：https://blog.csdn.net/qq_37541097/article/details/113247318
+* 对数据集不了解可以看下UP的博文：https://blog.csdn.net/qq_37541097/article/details/113247318
 * 这里以下载coco2017数据集为例，主要下载三个文件：
     * `2017 Train images [118K/18GB]`：训练过程中使用到的所有图像文件
     * `2017 Val images [5K/1GB]`：验证过程中使用到的所有图像文件
@@ -68,7 +69,7 @@ coco数据集的类别加上背景(0)的话有91类，其中有很多的类别�
 
 ### Pascal VOC2012数据集
 * 数据集下载地址： http://host.robots.ox.ac.uk/pascal/VOC/voc2012/index.html#devkit
-* 对数据集不了解的可以看下我写的博文：https://blog.csdn.net/qq_37541097/article/details/115787033
+* 对数据集不了解的可以看下UP的博文：https://blog.csdn.net/qq_37541097/article/details/115787033
 * 解压后得到的文件夹结构如下：
 ```
 VOCdevkit
@@ -134,7 +135,7 @@ amp：是否使用混合精度训练，不仅能加速训练还能减少gpu的�
 ```
 
 
-训练得到权重下载地址： https://pan.baidu.com/s/1qpXUIsvnj8RHY-V05J-mnA  密码: 63d5
+训练得到权重下载地址（UP提供）： https://pan.baidu.com/s/1qpXUIsvnj8RHY-V05J-mnA  密码: 63d5
 
 在COCO2017验证集上的mAP(目标检测任务)：
 ```
@@ -167,3 +168,5 @@ amp：是否使用混合精度训练，不仅能加速训练还能减少gpu的�
  Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.509
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.619
 ```
+
+# 最后感谢up：霹雳吧啦Wz的分享，后续加速完成后 ，再把更改部分做详细解释！
