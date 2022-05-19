@@ -173,6 +173,7 @@ def main(args):
             txt = "epoch:{} {}".format(epoch, '  '.join(result_info))
             f.write(txt + "\n")
             
+            result_info=[float(i) for i in result_info]
             #wandbl上传det信息
             if args.open_wandbl:
                 wandb.log({'epoch': epoch,
@@ -198,6 +199,7 @@ def main(args):
             txt = "epoch:{} {}".format(epoch, '  '.join(result_info))
             f.write(txt + "\n")
             
+            result_info=[float(i) for i in result_info]
             #wandbl上传seg信息
             if args.open_wandbl:
                 wandb.log({'epoch': epoch,
