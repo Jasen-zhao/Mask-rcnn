@@ -33,12 +33,12 @@ def time_synchronized():
 def main():
     num_classes = 90  # 不包含背景
     box_thresh = 0.5 #在推理过程中，只返回大于阈值的box
-    weights_path = "./train_model/model_25.pth"
-    img_path = "./test_image/pedestrian_car.jpeg"
-    label_json_path = './coco91_indices.json'
+    weights_path = "../model_zero/maskrcnn_resnet50_fpn_coco.pth"
+    img_path = "./test_inference/pedestrian_car.jpeg"
+    label_json_path = './dataset_tools/coco91_indices.json'
 
     # get devices
-    device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("using {} device.".format(device))
 
     # create model
@@ -48,8 +48,8 @@ def main():
     assert os.path.exists(weights_path), "{} file dose not exist.".format(weights_path)
     
     #在自己训练时，模型是保存在key为"model"的字样下，但是官方提供的预训练模型没有该项，需要去掉
-    model.load_state_dict(torch.load(weights_path, map_location='cpu')["model"])
-    # model.load_state_dict(torch.load(weights_path, map_location='cpu'))
+    # model.load_state_dict(torch.load(weights_path, map_location='cpu')["model"])
+    model.load_state_dict(torch.load(weights_path, map_location='cpu'))
     model.to(device)
 
     # read class_indict
@@ -104,7 +104,7 @@ def main():
         plt.imshow(plot_img)
         plt.show()
         # 保存预测的图片结果
-        plot_img.save("./result_inference/test_result.jpg")
+        plot_img.save("./test_inference/test_result.jpg")
 
 
 if __name__ == '__main__':

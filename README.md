@@ -137,6 +137,12 @@ amp：是否使用混合精度训练，不仅能加速训练还能减少gpu的�
 CUDA_VISIBLE_DEVICES=7 torchrun train.py --pretrain False --amp True
 ```
 
+```
+推理
+CUDA_VISIBLE_DEVICES=2 python predict.py
+默认把模型先放到0卡,当0卡被占满时会爆显存,这时候CUDA_VISIBLE_DEVICES=2,会把2卡当作0卡!!
+```
+
 
 训练得到权重下载地址（UP提供）： https://pan.baidu.com/s/1qpXUIsvnj8RHY-V05J-mnA  密码: 63d5
 
