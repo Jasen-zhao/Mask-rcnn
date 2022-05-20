@@ -1,5 +1,7 @@
 import os
 import datetime
+import sys 
+sys.path.append("..") 
 
 import torch
 from torchvision.ops.misc import FrozenBatchNorm2d
@@ -7,8 +9,8 @@ from torchvision.ops.misc import FrozenBatchNorm2d
 import transforms
 from network_files import MaskRCNN
 from backbone import resnet50_fpn_backbone
-from my_dataset_coco import CocoDetection
-from my_dataset_voc import VOCInstances
+from dataset_tools.my_dataset_coco import CocoDetection
+from dataset_tools.my_dataset_voc import VOCInstances
 from train_utils import train_eval_utils as utils
 from train_utils import GroupedBatchSampler, create_aspect_ratio_groups
 
@@ -22,13 +24,13 @@ def create_model(num_classes, load_pretrain_weights=True):
     # backbone = resnet50_fpn_backbone(norm_layer=FrozenBatchNorm2d,
     #                                  trainable_layers=3)
     # resnet50 imagenet weights url: https://download.pytorch.org/models/resnet50-0676ba61.pth
-    backbone = resnet50_fpn_backbone(pretrain_path="resnet50.pth", trainable_layers=3)
+    backbone = resnet50_fpn_backbone(pretrain_path="../model_zero/resnet50.pth", trainable_layers=3)
 
     model = MaskRCNN(backbone, num_classes=num_classes)
 
     if load_pretrain_weights:
         # coco weights url: "https://download.pytorch.org/models/maskrcnn_resnet50_fpn_coco-bf2d0c1e.pth"
-        weights_dict = torch.load("./maskrcnn_resnet50_fpn_coco.pth", map_location="cpu")
+        weights_dict = torch.load("../model_zero/maskrcnn_resnet50_fpn_coco.pth", map_location="cpu")
         for k in list(weights_dict.keys()):
             if ("box_predictor" in k) or ("mask_fcn_logits" in k):
                 del weights_dict[k]
@@ -44,8 +46,8 @@ def main(args):
 
     # 用来保存coco_info的文件
     now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-    det_results_file = f"det_results{now}.txt" #检测的验证结果
-    seg_results_file = f"seg_results{now}.txt" #实例分割的验证结果
+    det_results_file = f"./train_result/det_results{now}.txt" #检测的验证结果
+    seg_results_file = f"./train_result/seg_results{now}.txt" #实例分割的验证结果
 
     #数据增强
     data_transform = {
@@ -58,9 +60,9 @@ def main(args):
 
     # load train data set
     # coco2017 -> annotations -> instances_train2017.json
-    train_dataset = CocoDetection(data_root, "train", data_transform["train"])
+    # train_dataset = CocoDetection(data_root, "train", data_transform["train"])
     # VOCdevkit -> VOC2012 -> ImageSets -> Main -> train.txt
-    # train_dataset = VOCInstances(data_root, year="2012", txt_name="train.txt", transforms=data_transform["train"])
+    train_dataset = VOCInstances(data_root, year="2012", txt_name="train.txt", transforms=data_transform["train"])
     train_sampler = None
 
     # 是否按图片相似高宽比采样图片组成batch
@@ -94,9 +96,9 @@ def main(args):
 
     # load validation data set
     # coco2017 -> annotations -> instances_val2017.json
-    val_dataset = CocoDetection(data_root, "val", data_transform["val"])
+    # val_dataset = CocoDetection(data_root, "val", data_transform["val"])
     # VOCdevkit -> VOC2012 -> ImageSets -> Main -> val.txt
-    # val_dataset = VOCInstances(data_root, year="2012", txt_name="val.txt", transforms=data_transform["val"])
+    val_dataset = VOCInstances(data_root, year="2012", txt_name="val.txt", transforms=data_transform["val"])
     val_data_loader = torch.utils.data.DataLoader(val_dataset,
                                                   batch_size=1,
                                                   shuffle=False,
@@ -110,16 +112,20 @@ def main(args):
     model.to(device)
 
     #wandb初始化
-    if args.open_wandbl:
+    if args.open_wandb:
         wandb.init(project="mask_rcnn",name="mask_rcnn_for_coco")
 
-        config = wandb.config
-        config.batch_size =args.batch_size
-        config.epochs = args.epochs
-        config.lr = args.lr
-        config.momentum = args.momentum
-        config.device = args.device
-        config.num_classes = args.num_classes
+        wandb.config.update({
+            "batch_size": args.batch_size,
+            "epochs": args.epochs,
+            "lr":args.lr,
+            "momentum":args.momentum,
+            "device":args.device,
+            "num_classes":args.num_classes
+        })
+        #归类
+        wandb.define_metric("det/*")
+        wandb.define_metric("seg/*")
 
         wandb.watch(model, log="all",log_freq=47630) #每个gpu的batch_size为16,epoch=26
 
@@ -166,6 +172,10 @@ def main(args):
         # evaluate on the test dataset
         det_info, seg_info = utils.evaluate(model, val_data_loader, device=device)
 
+        #保存epoch的目的是当横坐标
+        if args.open_wandb:
+            wandb.log({'epoch':epoch},step=epoch)
+
         # write detection into txt
         with open(det_results_file, "a") as f:
             # 写入的数据包括coco指标还有loss和learning rate
@@ -175,22 +185,21 @@ def main(args):
             
             result_info=[float(i) for i in result_info]
             #wandbl上传det信息
-            if args.open_wandbl:
-                wandb.log({'epoch': epoch,
-                            'det_AP': result_info[0],
-                            'det_AP50': result_info[1],
-                            'det_AP75': result_info[2],
-                            'det_AP_S': result_info[3],
-                            'det_AP_L': result_info[4],
-                            'det_AP_M': result_info[5],
-                            'det_AR1': result_info[6],
-                            'det_AR10': result_info[7],
-                            'det_AR100': result_info[8],
-                            'det_AR_S': result_info[9],
-                            'det_AR_M': result_info[10],
-                            'det_AR_L': result_info[11],
-                            'det_mean_loss':result_info[12],
-                            'det_lr':result_info[13]})
+            if args.open_wandb:
+                wandb.log({'det/AP': result_info[0],
+                        'det/AP50': result_info[1],
+                        'det/AP75': result_info[2],
+                        'det/AP_S': result_info[3],
+                        'det/AP_L': result_info[4],
+                        'det/AP_M': result_info[5],
+                        'det/AR1': result_info[6],
+                        'det/AR10': result_info[7],
+                        'det/AR100': result_info[8],
+                        'det/AR_S': result_info[9],
+                        'det/AR_M': result_info[10],
+                        'det/AR_L': result_info[11],
+                        'det/mean_loss':result_info[12],
+                        'det/lr':result_info[13]},step=epoch)#统一全局step为epoch
 
         # write seg into txt
         with open(seg_results_file, "a") as f:
@@ -201,22 +210,21 @@ def main(args):
             
             result_info=[float(i) for i in result_info]
             #wandbl上传seg信息
-            if args.open_wandbl:
-                wandb.log({'epoch': epoch,
-                        'seg_AP': result_info[0],
-                        'seg_AP50': result_info[1],
-                        'seg_AP75': result_info[2],
-                        'seg_AP_S': result_info[3],
-                        'seg_AP_L': result_info[4],
-                        'seg_AP_M': result_info[5],
-                        'seg_AR1': result_info[6],
-                        'seg_AR10': result_info[7],
-                        'seg_AR100': result_info[8],
-                        'seg_AR_S': result_info[9],
-                        'seg_AR_M': result_info[10],
-                        'seg_AR_L': result_info[11],
-                        'seg_mean_loss':result_info[12],
-                        'seg_lr':result_info[13]})
+            if args.open_wandb:
+                wandb.log({'seg/AP': result_info[0],
+                        'seg/AP50': result_info[1],
+                        'seg/AP75': result_info[2],
+                        'seg/AP_S': result_info[3],
+                        'seg/AP_L': result_info[4],
+                        'seg/AP_M': result_info[5],
+                        'seg/AR1': result_info[6],
+                        'seg/AR10': result_info[7],
+                        'seg/AR100': result_info[8],
+                        'seg/AR_S': result_info[9],
+                        'seg/AR_M': result_info[10],
+                        'seg/AR_L': result_info[11],
+                        'seg/mean_loss':result_info[12],
+                        'seg/lr':result_info[13]},step=epoch)#统一全局step为epoch
 
         val_map.append(det_info[1])  # pascal mAP
 
@@ -231,7 +239,7 @@ def main(args):
         torch.save(save_files, "./train_model/model_{}.pth".format(epoch))
         
         #wandbl保存模型
-        if args.open_wandbl:
+        if args.open_wandb:
             wandb.save("./train_model/model_{}.pth".format(epoch))
 
 
@@ -254,16 +262,25 @@ if __name__ == "__main__":
 
     # 训练设备类型
     parser.add_argument('--device', default='cuda:0', help='device')
+    
+    # 训练文件的根目录(coco2017)
+    defualt_data_path='../../VOCdevkit' #VOC数据集
+    # defualt_data_path='../../cocodevkit' #coco数据集
     # 训练数据集的根目录
-    parser.add_argument('--data-path', default='../cocodevkit', help='dataset')
-    # 检测目标类别数(不包含背景)
-    parser.add_argument('--num-classes', default=90, type=int, help='num_classes')
+    parser.add_argument('--data-path', default=defualt_data_path, help='dataset')
+    
+    # 检测目标类别数(不包含背景), coco:90  voc:20,不更改会报严重错误!
+    parser.add_argument('--num-classes', default=20, type=int, help='num_classes')
+    
     # 文件保存地址
     parser.add_argument('--output-dir', default='./train_model', help='path where to save')
+    
     # 若需要接着上次训练，则指定上次训练保存权重文件地址
     parser.add_argument('--resume', default='', type=str, help='resume from checkpoint')
+    
     # 指定接着从哪个epoch数开始训练
     parser.add_argument('--start_epoch', default=0, type=int, help='start epoch')
+    
     # 训练的总epoch数
     parser.add_argument('--epochs', default=26, type=int, metavar='N',
                         help='number of total epochs to run')
@@ -274,17 +291,21 @@ if __name__ == "__main__":
     # SGD的momentum参数
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                         help='momentum')
+    
     # SGD的weight_decay参数
     parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
                         metavar='W', help='weight decay (default: 1e-4)',
                         dest='weight_decay')
+    
     # 针对torch.optim.lr_scheduler.MultiStepLR的参数
     parser.add_argument('--lr-steps', default=[16, 22], nargs='+', type=int,
                         help='decrease lr every step-size epochs')
+    
     # 针对torch.optim.lr_scheduler.MultiStepLR的参数
     parser.add_argument('--lr-gamma', default=0.1, type=float, help='decrease lr by a factor of lr-gamma')
+    
     # 训练的batch size(如果内存/GPU显存充裕，建议设置更大)
-    parser.add_argument('--batch_size', default=2, type=int, metavar='N',
+    parser.add_argument('--batch_size', default=16, type=int, metavar='N',
                         help='batch size when training.')
     parser.add_argument('--aspect-ratio-group-factor', default=3, type=int)
     
@@ -294,7 +315,7 @@ if __name__ == "__main__":
     parser.add_argument("--amp", default=False, help="Use torch.cuda.amp for mixed precision training")
 
     #是否开启wandbl,默认打开
-    parser.add_argument('--open_wandbl', default=True, help='whether open wandbl')
+    parser.add_argument('--open_wandb',type=bool, default=True, help='whether open wandb')
 
     args = parser.parse_args()
     print(args)

@@ -5,6 +5,8 @@
 
 import os
 import json
+import sys 
+sys.path.append("..") 
 
 import torch
 from tqdm import tqdm
@@ -13,8 +15,8 @@ import numpy as np
 import transforms
 from backbone import resnet50_fpn_backbone
 from network_files import MaskRCNN
-from my_dataset_coco import CocoDetection
-from my_dataset_voc import VOCInstances
+from dataset_tools.my_dataset_coco import CocoDetection
+from dataset_tools.my_dataset_voc import VOCInstances
 from train_utils import EvalCOCOMetric
 
 

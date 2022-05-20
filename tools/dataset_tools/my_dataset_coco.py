@@ -1,10 +1,13 @@
 import os
 import json
+import sys
 
 import torch
 from PIL import Image
 import torch.utils.data as data
 from pycocotools.coco import COCO
+sys.path.append("..")   #这句是为了导入_config
+
 from train_utils import coco_remove_images_without_annotations, convert_coco_poly_mask
 
 
@@ -46,7 +49,7 @@ class CocoDetection(data.Dataset):
 
         if dataset == "train":
             json_str = json.dumps(coco_classes, indent=4)
-            with open("coco91_indices.json", "w") as f:
+            with open("./dataset_tools/coco91_indices.json", "w") as f:
                 f.write(json_str)
 
         self.coco_classes = coco_classes

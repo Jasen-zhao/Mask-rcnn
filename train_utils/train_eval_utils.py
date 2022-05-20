@@ -6,6 +6,7 @@ import torch
 
 import train_utils.distributed_utils as utils
 from .coco_eval import EvalCOCOMetric
+from train_utils import mkdir
 
 
 def train_one_epoch(model, optimizer, data_loader, device, epoch,
@@ -72,8 +73,10 @@ def evaluate(model, data_loader, device):
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = "Test: "
 
-    det_metric = EvalCOCOMetric(data_loader.dataset.coco, iou_type="bbox", results_file_name="det_results.json")
-    seg_metric = EvalCOCOMetric(data_loader.dataset.coco, iou_type="segm", results_file_name="seg_results.json")
+    mkdir("./train_result")
+
+    det_metric = EvalCOCOMetric(data_loader.dataset.coco, iou_type="bbox", results_file_name="./train_result/det_results.json")
+    seg_metric = EvalCOCOMetric(data_loader.dataset.coco, iou_type="segm", results_file_name="./train_result/seg_results.json")
     for image, targets in metric_logger.log_every(data_loader, 100, header):
         image = list(img.to(device) for img in image)
 

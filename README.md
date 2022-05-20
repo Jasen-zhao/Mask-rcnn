@@ -125,13 +125,16 @@ python train.py --data-path /data/VOCdevkit
 ## 复现结果
 在COCO2017数据集上进行复现，训练过程中仅载入Resnet50的预训练权重，训练26个epochs。训练采用指令如下：
 ```
-torchrun --nproc_per_node=8 train_multi_GPU.py --batch-size 8 --lr 0.08 --pretrain False --amp True
-或者\
 CUDA_VISIBLE_DEVICES=1,2 torchrun --nproc_per_node=2 train_multi_GPU.py --pretrain False --amp True
 ```
 ```
 pretrain：是否使用官方提供的预训练模型
 amp：是否使用混合精度训练，不仅能加速训练还能减少gpu的显存占用
+```
+
+```
+单卡训练
+CUDA_VISIBLE_DEVICES=7 torchrun train.py --pretrain False --amp True
 ```
 
 
@@ -170,3 +173,13 @@ amp：是否使用混合精度训练，不仅能加速训练还能减少gpu的�
 ```
 
 ## 最后感谢up：霹雳吧啦Wz的分享，后续加速完成后 ，再把更改部分做详细解释！
+
+
+
+```
+训练的结果会保存在:train_result文件夹
+result_inference:推理结果
+model_zero:预训练模型
+train_model:训练得到的模型结果
+tools:训练和推理模型
+```

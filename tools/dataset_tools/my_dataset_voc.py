@@ -1,5 +1,7 @@
 import os
 import json
+import sys 
+sys.path.append("..") 
 
 from lxml import etree
 import numpy as np
@@ -30,7 +32,7 @@ class VOCInstances(Dataset):
             file_names = [x.strip() for x in f.readlines() if len(x.strip()) > 0]
 
         # read class_indict
-        json_file = 'pascal_voc_indices.json'
+        json_file = './dataset_tools/pascal_voc_indices.json'
         assert os.path.exists(json_file), "{} file not exist.".format(json_file)
         with open(json_file, 'r') as f:
             idx2classes = json.load(f)
@@ -139,7 +141,7 @@ class VOCInstances(Dataset):
 
 def parse_xml_to_dict(xml):
     """
-    将xml文件解析成字典形式，参考tensorflow的recursive_parse_xml_to_dict
+    将xml文件解析成字典形式,参考tensorflow的recursive_parse_xml_to_dict
     Args:
         xml: xml tree obtained by parsing XML file contents using lxml.etree
 

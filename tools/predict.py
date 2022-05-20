@@ -1,6 +1,8 @@
 import os
 import time
 import json
+import sys 
+sys.path.append("..") 
 
 import numpy as np
 from PIL import Image
@@ -31,7 +33,7 @@ def time_synchronized():
 def main():
     num_classes = 90  # 不包含背景
     box_thresh = 0.5 #在推理过程中，只返回大于阈值的box
-    weights_path = "./model_zero/maskrcnn_resnet50_fpn_coco.pth"
+    weights_path = "./train_model/model_25.pth"
     img_path = "./test_image/pedestrian_car.jpeg"
     label_json_path = './coco91_indices.json'
 
@@ -46,8 +48,8 @@ def main():
     assert os.path.exists(weights_path), "{} file dose not exist.".format(weights_path)
     
     #在自己训练时，模型是保存在key为"model"的字样下，但是官方提供的预训练模型没有该项，需要去掉
-    # model.load_state_dict(torch.load(weights_path, map_location='cpu')["model"])
-    model.load_state_dict(torch.load(weights_path, map_location='cpu'))
+    model.load_state_dict(torch.load(weights_path, map_location='cpu')["model"])
+    # model.load_state_dict(torch.load(weights_path, map_location='cpu'))
     model.to(device)
 
     # read class_indict
